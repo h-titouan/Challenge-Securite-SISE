@@ -180,7 +180,8 @@ def CAH_permit(df):
     plt.show()
     return(fig)
 
-def IPsrc(df):
+#n correspond à l'index de l'IP source
+def IPsrc(df,n):
     df_permit = df[df['action'] == 'PERMIT']
     IPsrc_permit=df_permit.ipsrc.value_counts().sort_values(ascending=False)
     IPsrc_permit=IPsrc_permit.to_frame().reset_index()
@@ -190,7 +191,12 @@ def IPsrc(df):
     IPsrc_deny=IPsrc_deny.to_frame().reset_index()
     IPsrc_deny.columns = ['IPsrc','nombre refusé']
     df_IPsrc = pd.merge(IPsrc_permit, IPsrc_deny, how='outer')
+    df_IPsrc['nombre refusé'] = df_IPsrc['nombre refusé'].fillna(0)
+    df_IPsrc['nombre autorisé'] = df_IPsrc['nombre autorisé'].fillna(0)
     df_IPsrc=df_IPsrc.reset_index()
+    value=df_IPsrc.loc[n, 'IPsrc']
+    nb_value_deny=df_IPsrc.loc[n, 'nombre refusé']
+    nb_value_permit=df_IPsrc.loc[n, 'nombre autorisé']
     
     # create initial scatter plot
     fig = px.scatter(df_IPsrc, x='index', y='nombre autorisé', title="Nombre autorisé et refusé de IP source")
@@ -206,4 +212,21 @@ def IPsrc(df):
     # update the layout with a legend
     fig.update_layout(legend=dict(title='Légende', orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
     
+    # add vertical line and text
+    fig.add_shape(type='line',
+              x0=n, y0=0, x1=n, y1=max(df_IPsrc['nombre autorisé']),
+              line=dict(color='green', width=3))
+    #texte
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/2,
+                   text=f"IP source : {value}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/3,
+                   text=f"nombre accès refusés : {nb_value_deny}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/4,
+                   text=f"nombre accès autorisés : {nb_value_permit}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
     return(fig)
