@@ -181,7 +181,8 @@ def CAH_permit(df):
     return(fig)
 
 #n correspond à l'index de l'IP source
-def IPsrc(df,n):
+#creation du dataframe
+def IPsrc_dataframe(df):
     df_permit = df[df['action'] == 'PERMIT']
     IPsrc_permit=df_permit.ipsrc.value_counts().sort_values(ascending=False)
     IPsrc_permit=IPsrc_permit.to_frame().reset_index()
@@ -194,9 +195,18 @@ def IPsrc(df,n):
     df_IPsrc['nombre refusé'] = df_IPsrc['nombre refusé'].fillna(0)
     df_IPsrc['nombre autorisé'] = df_IPsrc['nombre autorisé'].fillna(0)
     df_IPsrc=df_IPsrc.reset_index()
+    return(df_IPsrc)
+
+#max pour la slide bar
+max=IPsrc_dataframe(df).shape[0]
+max
+
+def IPsrc(df,n):
+    df_IPsrc=IPsrc_dataframe(df)
     value=df_IPsrc.loc[n, 'IPsrc']
     nb_value_deny=df_IPsrc.loc[n, 'nombre refusé']
     nb_value_permit=df_IPsrc.loc[n, 'nombre autorisé']
+    m=df_IPsrc['nombre autorisé'].max()
     
     # create initial scatter plot
     fig = px.scatter(df_IPsrc, x='index', y='nombre autorisé', title="Nombre autorisé et refusé de IP source")
@@ -214,18 +224,18 @@ def IPsrc(df,n):
     
     # add vertical line and text
     fig.add_shape(type='line',
-              x0=n, y0=0, x1=n, y1=max(df_IPsrc['nombre autorisé']),
+              x0=n, y0=0, x1=n, y1=m,
               line=dict(color='green', width=3))
     #texte
-    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/2,
+    fig.add_annotation(x=n+1, y=m/2,
                    text=f"IP source : {value}",
                    showarrow=False,
                    font=dict(size=14, color='black'))
-    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/3,
+    fig.add_annotation(x=n+1, y=m/3,
                    text=f"nombre accès refusés : {nb_value_deny}",
                    showarrow=False,
                    font=dict(size=14, color='black'))
-    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/4,
+    fig.add_annotation(x=n+1, y=m/4,
                    text=f"nombre accès autorisés : {nb_value_permit}",
                    showarrow=False,
                    font=dict(size=14, color='black'))
