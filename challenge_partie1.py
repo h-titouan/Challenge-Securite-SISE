@@ -158,3 +158,9 @@ def proto(df):
     graph=tab.plot(kind='bar', stacked=True, legend=True, ylim=[0,800000], color=['red','blue'], ylabel='Effectifs')
     plt.legend(loc='upper left', bbox_to_anchor=(0,1), ncol=1, borderaxespad=0)
     return(graph)
+
+def TOP_IPsrc(df,n):
+    IPsrc=df.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc=IPsrc.to_frame().reset_index()
+    IPsrc.columns = ['IPsrc','nombre']
+    return(IPsrc.head(n))
