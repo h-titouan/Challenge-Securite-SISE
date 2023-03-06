@@ -42,6 +42,7 @@ st.plotly_chart(pieaction(data))
 
 st.pyplot(TOPportpermit(data,st.session_state['port'],st.session_state['top']))
 
-st.pyplot(proto(data))
+#Fonctionne pas
+st.write(proto(data))
 
-st.Write(TOP_IPsrc(data, n = 10))
+st.write(TOP_IPsrc(data, st.session_state['top']))
