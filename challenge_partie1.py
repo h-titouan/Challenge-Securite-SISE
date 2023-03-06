@@ -149,3 +149,32 @@ def TOP_IPsrc(df,n):
     IPsrc=IPsrc.to_frame().reset_index()
     IPsrc.columns = ['IPsrc','nombre']
     return(IPsrc.head(n))
+
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+def CAH_permit(df):
+    # Créer un tableau de fréquences des ports de destination ayant été accepté
+    test = pd.DataFrame( src_fw.loc[src_fw['action'].str.contains('PERMIT'), 'portdst'].value_counts())
+
+    # Sélectionner les comptes ayant une fréquence > 0
+    test = test[test['portdst'] > 0]
+
+    # Renommer les colonnes et l'index
+    test.columns = ['freq']
+    test.index.name = 'portdst'
+
+    # Effectuer une classification hiérarchique ascendante (méthode de Ward) sur les données standardisées
+    Z = linkage(test['freq'].values.reshape(-1, 1), 'ward')
+
+    # Afficher le dendrogramme résultant
+    plt.figure(figsize=(10, 5))
+    fig=dendrogram(Z, labels=test.index)
+
+    # Tourner les labels de l'axe des x verticalement
+    plt.xticks(rotation='vertical')
+
+    plt.title('Classification hiérarchique ascendante des ports de destination ayant au leur accès autorisé')
+    plt.xlabel('portdst')
+    plt.ylabel('Distance')
+    plt.show()
+    return(fig)
