@@ -42,22 +42,22 @@ def barproto(df):
     return(fig_protobar)
 
 def TOP_regleUDP(df,n):
-    src_fw_UDP = src_fw[src_fw['proto'] == 'UDP']
-    UDPregle=src_fw.regle.value_counts().sort_values(ascending=False)
+    df_UDP = df[df['proto'] == 'UDP']
+    UDPregle=df_UDP.regle.value_counts().sort_values(ascending=False)
     UDPregle=UDPregle.to_frame().reset_index()
     UDPregle.columns = ['regle','effectif']
-    #return(UDPregle['regle'].head(n))
     return(UDPregle.head(n))
 
 def TOP_regleTCP(df,n):
-    src_fw_TCP = src_fw[src_fw['proto'] == 'TCP']
-    TCPregle=src_fw.regle.value_counts().sort_values(ascending=False)
+    df_TCP = df[df['proto'] == 'TCP']
+    TCPregle=df_TCP.regle.value_counts().sort_values(ascending=False)
     TCPregle=TCPregle.to_frame().reset_index()
     TCPregle.columns = ['regle','nombre']
     return(TCPregle.head(n))
 
+
 def rapprochement_TCP(df,n):
-    TCP = src_fw[(src_fw['proto'] == 'TCP')]
+    TCP = df[(df['proto'] == 'TCP')]
     selection = ['portdst','regle','action'] 
     TCP=TCP[selection]
     #selon les actions
@@ -71,5 +71,4 @@ def pieaction(df):
     df_action=df_action.to_frame().reset_index()
     df_action.columns=['index','action']
     fig_actionpie = px.pie(df_action, values='action', names='index', title='Répartition des protocoles')
-    fig_actionpie.show()
     return(fig_actionpie)
