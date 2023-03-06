@@ -84,9 +84,9 @@ def TOPportpermit(df,p,n):
     if n<= df_portdst.shape[0]:
         df_portdst=df_portdst.head(n)
     #bar plot
-    fig_portdstbar = px.bar(df_portdst, x="portdst", y="nombre", color="portdst", title="Top des ports de destination avec accès autorisé")
-    fig_portdstbar.update_layout(showlegend = False)
-    return(fig_portdstbar)
+    sns.set_style('whitegrid')
+    fig = sns.barplot(x=df_portdst['portdst'], y=df_portdst['nombre'])
+    return fig.figure
 
 
 def action_heure(df):
