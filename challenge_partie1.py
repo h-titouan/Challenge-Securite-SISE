@@ -111,3 +111,34 @@ def action_heure(df):
     
     fig = px.line(result, x='heure', y='nombre', color='action', title="nombre d'actions selon l'heure")
     return fig
+
+def portdst_heure(df):
+    # Convertir la colonne 'Date' en type datetime pour pouvoir extraire l'heure
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Extraire l'heure de la colonne 'Date'
+    df['heure'] = df['date'].dt.hour
+    
+    df_deny=df[df['action'] == 'DENY']
+    
+    df_portdst=df_deny.portdst.value_counts()
+    df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
+    df_portdst=df_portdst.to_frame().reset_index()
+    df_portdst.columns=['portdst','nombre']
+
+    #unique_portdst = df['portdst'].unique()
+    unique_portdst=df_portdst['portdst'].head(10).values
+    dataframes = []
+    
+    for portdst in unique_portdst:
+        df_port = df_deny[df_deny['portdst'] == portdst]
+        count_by_hour = df_port.groupby('heure').size()
+        count_by_hour = count_by_hour.to_frame().reset_index()
+        count_by_hour.columns = ['heure', 'nombre']
+        count_by_hour['portdst'] = portdst
+        dataframes.append(count_by_hour)
+
+    result = pd.concat(dataframes)
+    
+    fig = px.line(result, x='heure', y='nombre', color='portdst', title="nombre de ports attaqués selon l'heure")
+    return fig
