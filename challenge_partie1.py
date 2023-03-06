@@ -3,6 +3,7 @@ import numpy as np
 import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.graph_objects as go
 
 import os
 os.chdir("C:/Users/cornuch/Desktop")
@@ -177,4 +178,32 @@ def CAH_permit(df):
     plt.xlabel('portdst')
     plt.ylabel('Distance')
     plt.show()
+    return(fig)
+
+def IPsrc(df):
+    df_permit = df[df['action'] == 'PERMIT']
+    IPsrc_permit=df_permit.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc_permit=IPsrc_permit.to_frame().reset_index()
+    IPsrc_permit.columns = ['IPsrc','nombre autorisé']
+    df_deny = df[df['action'] == 'DENY']
+    IPsrc_deny=df_deny.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc_deny=IPsrc_deny.to_frame().reset_index()
+    IPsrc_deny.columns = ['IPsrc','nombre refusé']
+    df_IPsrc = pd.merge(IPsrc_permit, IPsrc_deny, how='outer')
+    df_IPsrc=df_IPsrc.reset_index()
+    
+    # create initial scatter plot
+    fig = px.scatter(df_IPsrc, x='index', y='nombre autorisé', title="Nombre autorisé et refusé de IP source")
+
+    # add scatter graph for 'nombre autorisé'
+    trace1 = go.Scatter(x=df_IPsrc['index'], y=df_IPsrc['nombre autorisé'], mode='markers', name='Autorisé',marker=dict(color='blue'))
+    fig.add_trace(trace1)
+
+    # add scatter graph for 'nombre refusé'
+    trace2 = go.Scatter(x=df_IPsrc['index'], y=df_IPsrc['nombre refusé'], mode='markers', name='Refusé',marker=dict(color='red'))
+    fig.add_trace(trace2)
+
+    # update the layout with a legend
+    fig.update_layout(legend=dict(title='Légende', orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
+    
     return(fig)
