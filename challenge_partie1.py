@@ -87,3 +87,29 @@ def TOPportpermit(df,p,n):
     fig_portdstbar = px.bar(df_portdst, x="portdst", y="nombre", color="portdst", title="Top des ports de destination avec accès autorisé")
     fig_portdstbar.update_layout(showlegend = False)
     return(fig_portdstbar)
+
+def action_heure(df):
+    # Convertir la colonne 'Date' en type datetime pour pouvoir extraire l'heure
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Extraire l'heure de la colonne 'Date'
+    df['heure'] = df['date'].dt.hour
+
+    df_permit = df[(df['action'] == 'PERMIT')]
+
+    count_by_hour_permit = df_permit.groupby('heure').size()
+    count_by_hour_permit=count_by_hour_permit.to_frame().reset_index()
+    count_by_hour_permit.columns=['heure','nombre']
+    count_by_hour_permit['action'] = 'PERMIT'
+    
+    df_deny = df[(df['action'] == 'DENY')]
+
+    count_by_hour_deny = df_deny.groupby('heure').size()
+
+    count_by_hour_deny=count_by_hour_deny.to_frame().reset_index()
+    count_by_hour_deny.columns=['heure','nombre']
+    count_by_hour_deny['action'] = 'DENY'
+    
+    result = pd.concat([count_by_hour_permit,count_by_hour_deny])
+    fig = px.line(result, x="heure", y="nombre", color="action",title="nombre d'actions selon l'heure")
+    return(fig)
