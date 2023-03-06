@@ -43,27 +43,12 @@ def barproto(df):
     fig_protobar.update_layout(showlegend = False)
     return(fig_protobar)
 
-def TOP_regleICMP(df,n):
-    df_ICMP = df[df['proto'] == 'ICMP']
-    ICMPregle=df_ICMP.regle.value_counts().sort_values(ascending=False)
-    ICMPregle=ICMPregle.to_frame().reset_index()
-    ICMPregle.columns = ['regle','effectif']
-    return(ICMPregle.head(n))
-
-def TOP_regleUDP(df,n):
-    df_UDP = df[df['proto'] == 'UDP']
+def TOP_regle(df,n,proto):
+    df_UDP = df[df['proto'] == proto ]
     UDPregle=df_UDP.regle.value_counts().sort_values(ascending=False)
     UDPregle=UDPregle.to_frame().reset_index()
-    UDPregle.columns = ['regle','effectif']
+    UDPregle.columns = ['regle','nombre']
     return(UDPregle.head(n))
-
-def TOP_regleTCP(df,n):
-    df_TCP = df[df['proto'] == 'TCP']
-    TCPregle=df_TCP.regle.value_counts().sort_values(ascending=False)
-    TCPregle=TCPregle.to_frame().reset_index()
-    TCPregle.columns = ['regle','nombre']
-    return(TCPregle.head(n))
-
 
 def rapprochement_TCP(df,n):
     TCP = df[(df['proto'] == 'TCP')]
