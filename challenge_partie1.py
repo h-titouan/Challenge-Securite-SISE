@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import os
 os.chdir("C:/Users/cornuch/Desktop")
@@ -41,20 +43,12 @@ def barproto(df):
     fig_protobar.update_layout(showlegend = False)
     return(fig_protobar)
 
-def TOP_regleUDP(df,n):
-    df_UDP = df[df['proto'] == 'UDP']
+def TOP_regle(df,n,proto):
+    df_UDP = df[df['proto'] == proto ]
     UDPregle=df_UDP.regle.value_counts().sort_values(ascending=False)
     UDPregle=UDPregle.to_frame().reset_index()
-    UDPregle.columns = ['regle','effectif']
+    UDPregle.columns = ['regle','nombre']
     return(UDPregle.head(n))
-
-def TOP_regleTCP(df,n):
-    df_TCP = df[df['proto'] == 'TCP']
-    TCPregle=df_TCP.regle.value_counts().sort_values(ascending=False)
-    TCPregle=TCPregle.to_frame().reset_index()
-    TCPregle.columns = ['regle','nombre']
-    return(TCPregle.head(n))
-
 
 def rapprochement_TCP(df,n):
     TCP = df[(df['proto'] == 'TCP')]
@@ -75,7 +69,7 @@ def pieaction(df):
 
 #top n=10 ports inférieurs à p=1024 avec acces autorise
 def TOPportpermit(df,p,n):
-    df_permit = df[(df['action'] == 'PERMIT')]
+    df_permit = df[(df['action'] == 'PERMIT')& (df['portdst']<=p)]
     df_portdst=df_permit.portdst.value_counts()
     df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
     df_portdst=df_portdst.to_frame().reset_index()
@@ -84,9 +78,10 @@ def TOPportpermit(df,p,n):
     if n<= df_portdst.shape[0]:
         df_portdst=df_portdst.head(n)
     #bar plot
-    fig_portdstbar = px.bar(df_portdst, x="portdst", y="nombre", color="portdst", title="Top des ports de destination avec accès autorisé")
-    fig_portdstbar.update_layout(showlegend = False)
-    return(fig_portdstbar)
+    sns.set_style('whitegrid')
+    fig = sns.barplot(x=df_portdst['portdst'], y=df_portdst['nombre'])
+    return fig.figure
+
 
 def action_heure(df):
     # Convertir la colonne 'Date' en type datetime pour pouvoir extraire l'heure
@@ -95,21 +90,91 @@ def action_heure(df):
     # Extraire l'heure de la colonne 'Date'
     df['heure'] = df['date'].dt.hour
 
-    df_permit = df[(df['action'] == 'PERMIT')]
-
-    count_by_hour_permit = df_permit.groupby('heure').size()
-    count_by_hour_permit=count_by_hour_permit.to_frame().reset_index()
-    count_by_hour_permit.columns=['heure','nombre']
-    count_by_hour_permit['action'] = 'PERMIT'
+    unique_actions = df['action'].unique()
+    dataframes = []
     
-    df_deny = df[(df['action'] == 'DENY')]
+    for action in unique_actions:
+        df_action = df[df['action'] == action]
+        count_by_hour = df_action.groupby('heure').size()
+        count_by_hour = count_by_hour.to_frame().reset_index()
+        count_by_hour.columns = ['heure', 'nombre']
+        count_by_hour['action'] = action
+        dataframes.append(count_by_hour)
 
-    count_by_hour_deny = df_deny.groupby('heure').size()
-
-    count_by_hour_deny=count_by_hour_deny.to_frame().reset_index()
-    count_by_hour_deny.columns=['heure','nombre']
-    count_by_hour_deny['action'] = 'DENY'
+    result = pd.concat(dataframes)
     
-    result = pd.concat([count_by_hour_permit,count_by_hour_deny])
-    fig = px.line(result, x="heure", y="nombre", color="action",title="nombre d'actions selon l'heure")
+    fig = px.line(result, x='heure', y='nombre', color='action', title="nombre d'actions selon l'heure")
+    return fig
+
+def portdst_heure(df):
+    # Convertir la colonne 'Date' en type datetime pour pouvoir extraire l'heure
+    df['date'] = pd.to_datetime(df['date'])
+
+    # Extraire l'heure de la colonne 'Date'
+    df['heure'] = df['date'].dt.hour
+    
+    df_deny=df[df['action'] == 'DENY']
+    
+    df_portdst=df_deny.portdst.value_counts()
+    df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
+    df_portdst=df_portdst.to_frame().reset_index()
+    df_portdst.columns=['portdst','nombre']
+
+    #unique_portdst = df['portdst'].unique()
+    unique_portdst=df_portdst['portdst'].head(10).values
+    dataframes = []
+    
+    for portdst in unique_portdst:
+        df_port = df_deny[df_deny['portdst'] == portdst]
+        count_by_hour = df_port.groupby('heure').size()
+        count_by_hour = count_by_hour.to_frame().reset_index()
+        count_by_hour.columns = ['heure', 'nombre']
+        count_by_hour['portdst'] = portdst
+        dataframes.append(count_by_hour)
+
+    result = pd.concat(dataframes)
+    
+    fig = px.line(result, x='heure', y='nombre', color='portdst', title="nombre de ports attaqués selon l'heure")
+    return fig
+
+#affiche le bar plot des refus acceptés sur chaque type de port
+def proto(df):
+    tab = pd.crosstab(index=df['proto'], columns=df['action'])
+    graph=tab.plot(kind='bar', stacked=True, legend=True, ylim=[0,800000], color=['red','blue'], ylabel='Effectifs')
+    plt.legend(loc='upper left', bbox_to_anchor=(0,1), ncol=1, borderaxespad=0)
+    return(graph)
+
+def TOP_IPsrc(df,n):
+    IPsrc=df.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc=IPsrc.to_frame().reset_index()
+    IPsrc.columns = ['IPsrc','nombre']
+    return(IPsrc.head(n))
+
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+def CAH_permit(df):
+    # Créer un tableau de fréquences des ports de destination ayant été accepté
+    test = pd.DataFrame( src_fw.loc[src_fw['action'].str.contains('PERMIT'), 'portdst'].value_counts())
+
+    # Sélectionner les comptes ayant une fréquence > 0
+    test = test[test['portdst'] > 0]
+
+    # Renommer les colonnes et l'index
+    test.columns = ['freq']
+    test.index.name = 'portdst'
+
+    # Effectuer une classification hiérarchique ascendante (méthode de Ward) sur les données standardisées
+    Z = linkage(test['freq'].values.reshape(-1, 1), 'ward')
+
+    # Afficher le dendrogramme résultant
+    plt.figure(figsize=(10, 5))
+    fig=dendrogram(Z, labels=test.index)
+
+    # Tourner les labels de l'axe des x verticalement
+    plt.xticks(rotation='vertical')
+
+    plt.title('Classification hiérarchique ascendante des ports de destination ayant au leur accès autorisé')
+    plt.xlabel('portdst')
+    plt.ylabel('Distance')
+    plt.show()
     return(fig)
