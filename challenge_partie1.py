@@ -81,7 +81,7 @@ def TOPportpermit(df,p,n):
     df_portdst=df_portdst.to_frame().reset_index()
     df_portdst.columns=['portdst','nombre']
     df_portdst['portdst'] = df_portdst['portdst'].astype(str)
-    if n> df_portdst.shape[0]:
+    if n<= df_portdst.shape[0]:
         df_portdst=df_portdst.head(n)
     #bar plot
     fig_portdstbar = px.bar(df_portdst, x="portdst", y="nombre", color="portdst", title="Top des ports de destination avec accès autorisé")
