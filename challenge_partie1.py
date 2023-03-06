@@ -72,3 +72,18 @@ def pieaction(df):
     df_action.columns=['index','action']
     fig_actionpie = px.pie(df_action, values='action', names='index', title='Répartition des protocoles')
     return(fig_actionpie)
+
+#top n=10 ports inférieurs à p=1024 avec acces autorise
+def TOPportpermit(df,p,n):
+    df_permit = df[(df['action'] == 'PERMIT')]
+    df_portdst=df_permit.portdst.value_counts()
+    df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
+    df_portdst=df_portdst.to_frame().reset_index()
+    df_portdst.columns=['portdst','nombre']
+    df_portdst['portdst'] = df_portdst['portdst'].astype(str)
+    if n> df_portdst.shape[0]:
+        df_portdst=df_portdst.head(n)
+    #bar plot
+    fig_portdstbar = px.bar(df_portdst, x="portdst", y="nombre", color="portdst", title="Top des ports de destination avec accès autorisé")
+    fig_portdstbar.update_layout(showlegend = False)
+    return(fig_portdstbar)
