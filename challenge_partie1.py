@@ -75,7 +75,7 @@ def pieaction(df):
 
 #top n=10 ports inférieurs à p=1024 avec acces autorise
 def TOPportpermit(df,p,n):
-    df_permit = df[(df['action'] == 'PERMIT')]
+    df_permit = df[(df['action'] == 'PERMIT')& (df['portdst']<=p)]
     df_portdst=df_permit.portdst.value_counts()
     df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
     df_portdst=df_portdst.to_frame().reset_index()
