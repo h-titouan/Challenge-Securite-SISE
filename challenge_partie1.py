@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 import os
 os.chdir("C:/Users/cornuch/Desktop")
@@ -40,6 +42,13 @@ def barproto(df):
     fig_protobar = px.bar(diff_proto, x="index", y="proto", color="index", title="Nombre de protocoles par catégories")
     fig_protobar.update_layout(showlegend = False)
     return(fig_protobar)
+
+def TOP_regleICMP(df,n):
+    df_ICMP = df[df['proto'] == 'ICMP']
+    ICMPregle=df_ICMP.regle.value_counts().sort_values(ascending=False)
+    ICMPregle=ICMPregle.to_frame().reset_index()
+    ICMPregle.columns = ['regle','effectif']
+    return(ICMPregle.head(n))
 
 def TOP_regleUDP(df,n):
     df_UDP = df[df['proto'] == 'UDP']
@@ -142,3 +151,10 @@ def portdst_heure(df):
     
     fig = px.line(result, x='heure', y='nombre', color='portdst', title="nombre de ports attaqués selon l'heure")
     return fig
+
+#affiche le bar plot des refus acceptés sur chaque type de port
+def proto(df):
+    tab = pd.crosstab(index=df['proto'], columns=df['action'])
+    graph=tab.plot(kind='bar', stacked=True, legend=True, ylim=[0,800000], color=['red','blue'], ylabel='Effectifs')
+    plt.legend(loc='upper left', bbox_to_anchor=(0,1), ncol=1, borderaxespad=0)
+    return(graph)
