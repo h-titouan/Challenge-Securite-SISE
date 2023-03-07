@@ -2,6 +2,8 @@ import pandas as pd
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage
+import plotly.graph_objects as go
 
 def classementregle(df):
     classeregle=df.regle.value_counts().sort_values(ascending=False)
@@ -130,3 +132,80 @@ def TOP_IPsrc(df,n):
     IPsrc=IPsrc.to_frame().reset_index()
     IPsrc.columns = ['IPsrc','nombre']
     return(IPsrc.head(n))
+
+def CAH_permit(df):
+    # Créer un tableau de fréquences des ports de destination ayant été accepté
+    test = pd.DataFrame(df.loc[df['action'].str.contains('PERMIT'), 'portdst'].value_counts())
+
+    # Sélectionner les comptes ayant une fréquence > 0
+    test = test[test['portdst'] > 0]
+
+    # Renommer les colonnes et l'index
+    test.columns = ['freq']
+    test.index.name = 'portdst'
+
+    # Effectuer une classification hiérarchique ascendante (méthode de Ward) sur les données standardisées
+    Z = linkage(test['freq'].values.reshape(-1, 1), 'ward')
+
+    # Afficher le dendrogramme résultant
+    plt.figure(figsize=(10, 5))
+    fig=dendrogram(Z, labels=test.index)
+
+    # Tourner les labels de l'axe des x verticalement
+    plt.xticks(rotation='vertical')
+
+    plt.title('Classification hiérarchique ascendante des ports de destination ayant au leur accès autorisé')
+    plt.xlabel('portdst')
+    plt.ylabel('Distance')
+    plt.show()
+    return(fig)
+
+def IPsrc(df,n):
+    df_permit = df[df['action'] == 'PERMIT']
+    IPsrc_permit=df_permit.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc_permit=IPsrc_permit.to_frame().reset_index()
+    IPsrc_permit.columns = ['IPsrc','nombre autorisé']
+    df_deny = df[df['action'] == 'DENY']
+    IPsrc_deny=df_deny.ipsrc.value_counts().sort_values(ascending=False)
+    IPsrc_deny=IPsrc_deny.to_frame().reset_index()
+    IPsrc_deny.columns = ['IPsrc','nombre refusé']
+    df_IPsrc = pd.merge(IPsrc_permit, IPsrc_deny, how='outer')
+    df_IPsrc['nombre refusé'] = df_IPsrc['nombre refusé'].fillna(0)
+    df_IPsrc['nombre autorisé'] = df_IPsrc['nombre autorisé'].fillna(0)
+    df_IPsrc=df_IPsrc.reset_index()
+    value=df_IPsrc.loc[n, 'IPsrc']
+    nb_value_deny=df_IPsrc.loc[n, 'nombre refusé']
+    nb_value_permit=df_IPsrc.loc[n, 'nombre autorisé']
+    
+    # create initial scatter plot
+    fig = px.scatter(df_IPsrc, x='index', y='nombre autorisé', title="Nombre autorisé et refusé de IP source")
+
+    # add scatter graph for 'nombre autorisé'
+    trace1 = go.Scatter(x=df_IPsrc['index'], y=df_IPsrc['nombre autorisé'], mode='markers', name='Autorisé',marker=dict(color='blue'))
+    fig.add_trace(trace1)
+
+    # add scatter graph for 'nombre refusé'
+    trace2 = go.Scatter(x=df_IPsrc['index'], y=df_IPsrc['nombre refusé'], mode='markers', name='Refusé',marker=dict(color='red'))
+    fig.add_trace(trace2)
+
+    # update the layout with a legend
+    fig.update_layout(legend=dict(title='Légende', orientation='h', yanchor='bottom', y=1.02, xanchor='right', x=1))
+    
+    # add vertical line and text
+    fig.add_shape(type='line',
+              x0=n, y0=0, x1=n, y1=max(df_IPsrc['nombre autorisé']),
+              line=dict(color='green', width=3))
+    #texte
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/2,
+                   text=f"IP source : {value}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/3,
+                   text=f"nombre accès refusés : {nb_value_deny}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
+    fig.add_annotation(x=n+1, y=max(df_IPsrc['nombre autorisé'])/4,
+                   text=f"nombre accès autorisés : {nb_value_permit}",
+                   showarrow=False,
+                   font=dict(size=14, color='black'))
+    return(fig)
