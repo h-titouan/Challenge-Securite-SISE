@@ -1,3 +1,4 @@
+# & C:/Users/laura/.env/ChallengeSecurite/Scripts/Activate.ps1
 import streamlit as st
 import pandas as pd
 

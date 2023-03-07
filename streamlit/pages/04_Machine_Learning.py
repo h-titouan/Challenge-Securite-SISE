@@ -7,9 +7,11 @@ if 'df' in st.session_state:
 else : 
     data = lancement_data()
 
-barre = st.sidebar.slider('IP Source associé à l\'index ', 0, 30000, 1500)
-st.sidebar.write('IP Source choisie : ', str(barre))
-st.session_state['barre'] = barre
+st.title('Machine Learning')
 
-#st.plotly_chart(CAH_permit(data))
+barre = st.sidebar.text_input('IP Source associé à l\'index', '0')
+st.sidebar.write('IP Source choisie : ', str(barre))
+st.session_state['barre'] = int(barre)
+
+st.pyplot(CAH_permit(data))
 st.plotly_chart(IPsrc(data,st.session_state['barre']))

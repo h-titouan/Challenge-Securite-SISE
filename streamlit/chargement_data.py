@@ -69,20 +69,23 @@ def filter_dataframe(df: pd.DataFrame):
                 )
                 if user_text_input:
                     df = df[df[column].astype(str).str.contains(user_text_input)]
-    st.experimental_data_editor(df, key="data_editor") 
+    st.experimental_data_editor(df)
     return df
 
-def lancement_data(filtre = 'non'):
-    data = pd.read_csv('C:/Users/laura/Downloads/log_fw_3.csv/log_fw_3.csv', sep = ';', header=None)
-    data.columns = ['date','ipsrc', 'ipdst','proto','portsrc','portdst','regle','action','interface','neant','numtransp']
-    #supprimer la colonne 'neant'
-    data.drop('neant', axis=1, inplace=True)
-    # Trouver les lignes contenant des cellules vides
-    lignes_vides = data.isnull().any(axis=1)
-    # Supprimer les lignes contenant des cellules vides
-    data.dropna(inplace=True)
-    if filtre == 'oui':
-        data = filter_dataframe(data)
-    return data
+def lancement_data(filtre = 'non', n = 10000):
+    if n <= 17000000:
+        data = pd.read_csv('C:/Users/laura/Downloads/log_fw_3.csv/log_fw_3.csv', sep = ';', header=None, nrows = n)
+        data.columns = ['date','ipsrc', 'ipdst','proto','portsrc','portdst','regle','action','interface','neant','numtransp']
+        #supprimer la colonne 'neant'
+        data.drop('neant', axis=1, inplace=True)
+        # Trouver les lignes contenant des cellules vides
+        lignes_vides = data.isnull().any(axis=1)
+        # Supprimer les lignes contenant des cellules vides
+        data.dropna(inplace=True)
+        if filtre == 'oui':
+            data = filter_dataframe(data)
+        return data
+    else :
+        st.write("Erreur, choisir un nombre de données inférieur à 17 millions")
 
 

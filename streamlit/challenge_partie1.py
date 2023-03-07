@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 import plotly.graph_objects as go
+import plotly.offline as pyo
 
 def classementregle(df):
     classeregle=df.regle.value_counts().sort_values(ascending=False)
@@ -28,15 +29,6 @@ def TOP_regle(df,n,proto):
     UDPregle=UDPregle.to_frame().reset_index()
     UDPregle.columns = ['regle','nombre']
     return(UDPregle.head(n))
-
-def rapprochement_TCP(df,n):
-    TCP = df[(df['proto'] == 'TCP')]
-    selection = ['portdst','regle','action'] 
-    TCP=TCP[selection]
-    #selon les actions
-    TCP_deny=TCP[(TCP['action']=='DENY')]
-    TCP_permit=TCP[(TCP['action']=='PERMIT')]
-    return(TCP,TCP_deny.regle.value_counts(),TCP_deny.portdst.value_counts().head(n),TCP_permit.regle.value_counts(),TCP_permit.portdst.value_counts().head(n))
 
 def pieaction(df):
     df_action=df.action.value_counts()
@@ -210,4 +202,45 @@ def IPsrc(df,n):
                    text=f"nombre accès autorisés : {nb_value_permit}",
                    showarrow=False,
                    font=dict(size=14, color='black'))
+    return(fig)
+
+
+#rapprochement regle et action : permit-deny
+def tableregle(df):
+    TCP = df[(df['proto'] == 'TCP')]
+    selection = ['portdst','regle','action'] 
+    TCP=TCP[selection]
+    TCP['regle'] = TCP['regle'].astype(str)
+    
+    tabregle = pd.crosstab(index=TCP['regle'], columns=TCP['action'])
+    # Definir les données
+    data = []
+
+    for col in tabregle.columns:
+        trace = go.Bar(x=tabregle.index, y=tabregle[col], name=col, marker=dict(color="red" if col=="DENY" else "blue"))
+        data.append(trace)
+
+    # Definir le layout
+    layout = go.Layout(
+        barmode="stack",
+        yaxis=dict(title="Effectifs", range=[0, tabregle.values.max()]),
+        legend=dict(x=0, y=1, orientation="v")
+        )
+
+    # Créer un bar chart
+    fig = go.Figure(data=data, layout=layout)
+
+    return fig
+
+def portdstregle(TCP,n):
+    portdst_n=TCP.portdst.value_counts().sort_values(ascending=False)
+    portdst_n[:n]
+    top_ports = portdst_n[:n].index
+    df_top_ports = TCP[TCP['portdst'].isin(top_ports)]
+    tabportdst_n = pd.crosstab(index=df_top_ports['portdst'], columns=df_top_ports['regle'])
+    fig = px.bar(tabportdst_n, x=tabportdst_n.index, y=tabportdst_n.columns,
+             color_discrete_sequence=px.colors.qualitative.Dark24)
+    fig.update_layout(title=f'Top {n} Destination TCP Ports by Rule',
+                  xaxis_title='Destination TCP Port',
+                  yaxis_title='Number of Packets')
     return(fig)

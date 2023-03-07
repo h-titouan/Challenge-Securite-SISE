@@ -1,7 +1,7 @@
 import pandas as pd
 import streamlit as st
 import plotly.express as px
-from challenge_partie1 import classementregle,barproto,TOP_regle,rapprochement_TCP,pieaction,TOPportpermit, proto,TOP_IPsrc
+from challenge_partie1 import classementregle,barproto,TOP_regle,pieaction,TOPportpermit, proto,TOP_IPsrc, tableregle, portdstregle
 from chargement_data import lancement_data
 
 if 'df' in st.session_state:
@@ -36,12 +36,12 @@ with right :
     st.write('Meilleure règle des TCP')
     st.write(TOP_regle(data,st.session_state['top'], proto = 'TCP'))
 
-#st.table(rapprochement_TCP(st.session_state['df'],n = 5))
-
 st.plotly_chart(pieaction(data))
 
 st.pyplot(TOPportpermit(data,st.session_state['port'],st.session_state['top']))
 
 st.plotly_chart(proto(data))
 
-st.write(TOP_IPsrc(data, st.session_state['top']))
+st.plotly_chart(tableregle(data))
+
+st.write(portdstregle(data))
