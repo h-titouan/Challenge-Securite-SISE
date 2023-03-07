@@ -121,11 +121,13 @@ def portdst_heure(df):
 
 
 #affiche le bar plot des refus acceptés sur chaque type de port
+#affiche le bar plot des refus acceptés sur chaque type de port
 def proto(df):
     tab = pd.crosstab(index=df['proto'], columns=df['action'])
-    graph=tab.plot(kind='bar', stacked=True, legend=True, ylim=[0,800000], color=['red','blue'], ylabel='Effectifs')
-    plt.legend(loc='upper left', bbox_to_anchor=(0,1), ncol=1, borderaxespad=0)
-    return(graph)
+    fig = px.bar(tab, barmode='stack', color_discrete_sequence=['red', 'blue'])
+    fig.update_yaxes(range=[0, 800000], title='Effectifs')
+    fig.update_layout(legend=dict(orientation='h', yanchor='top', y=1.1, xanchor='center', x=0.5))
+    return(fig)
 
 def TOP_IPsrc(df,n):
     IPsrc=df.ipsrc.value_counts().sort_values(ascending=False)
