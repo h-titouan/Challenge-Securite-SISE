@@ -282,5 +282,4 @@ def tableregle(df):
 TCP = df[(df['proto'] == 'TCP')]
 selection = ['portdst','regle','action'] 
 TCP=TCP[selection]
-TCP['portdst']=TCP['portdst'].astype(str)
 TCP['regle'] = TCP['regle'].astype(str)
