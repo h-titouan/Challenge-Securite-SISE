@@ -255,3 +255,32 @@ def IPsrc(df,n):
                    showarrow=False,
                    font=dict(size=14, color='black'))
     return(fig)
+
+#rapprochement regle et action : permit-deny
+def tableregle(df):
+    tabregle = pd.crosstab(index=df['regle'], columns=df['action'])
+    # Definir les données
+    data = []
+
+    for col in tabregle.columns:
+        trace = go.Bar(x=tabregle.index, y=tabregle[col], name=col, marker=dict(color="red" if col=="DENY" else "blue"))
+        data.append(trace)
+
+    # Definir le layout
+    layout = go.Layout(
+        barmode="stack",
+        yaxis=dict(title="Effectifs", range=[0, tabregle.values.max()]),
+        legend=dict(x=0, y=1, orientation="v")
+        )
+
+    # Créer un bar chart
+    fig = go.Figure(data=data, layout=layout)
+
+    return(pyo.iplot(fig))
+
+#appliquer ce rapprochement à TCP :
+TCP = df[(df['proto'] == 'TCP')]
+selection = ['portdst','regle','action'] 
+TCP=TCP[selection]
+TCP['portdst']=TCP['portdst'].astype(str)
+TCP['regle'] = TCP['regle'].astype(str)
