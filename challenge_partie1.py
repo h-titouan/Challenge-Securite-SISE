@@ -4,6 +4,8 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
+import plotly.offline as pyo
+from scipy.cluster.hierarchy import dendrogram, linkage
 
 import os
 os.chdir("C:/Users/cornuch/Desktop")
@@ -141,9 +143,22 @@ def portdst_heure(df):
 #affiche le bar plot des refus acceptés sur chaque type de port
 def proto(df):
     tab = pd.crosstab(index=df['proto'], columns=df['action'])
-    graph=tab.plot(kind='bar', stacked=True, legend=True, ylim=[0,800000], color=['red','blue'], ylabel='Effectifs')
-    plt.legend(loc='upper left', bbox_to_anchor=(0,1), ncol=1, borderaxespad=0)
-    return(graph)
+    # Definir les données
+    data = []
+    for col in tab.columns:
+        trace = go.Bar(x=tab.index, y=tab[col], name=col, marker=dict(color="red" if col=="DENY" else "blue"))
+        data.append(trace)
+
+    # Definir le layout
+    layout = go.Layout(
+        barmode="stack",
+        yaxis=dict(title="Effectifs", range=[0, 800000]),
+        legend=dict(x=0, y=1, orientation="v")
+        )
+
+    # Créer le stacked bar chart
+    fig = go.Figure(data=data, layout=layout)
+    return(pyo.iplot(fig))
 
 def TOP_IPsrc(df,n):
     IPsrc=df.ipsrc.value_counts().sort_values(ascending=False)
@@ -151,7 +166,7 @@ def TOP_IPsrc(df,n):
     IPsrc.columns = ['IPsrc','nombre']
     return(IPsrc.head(n))
 
-from scipy.cluster.hierarchy import dendrogram, linkage
+
 
 def CAH_permit(df):
     # Créer un tableau de fréquences des ports de destination ayant été accepté
