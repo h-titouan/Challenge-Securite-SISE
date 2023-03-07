@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
 import plotly.graph_objects as go
 import plotly.offline as pyo
-
+import datetime as dt
 def classementregle(df):
     classeregle=df.regle.value_counts().sort_values(ascending=False)
     classeregle=classeregle.to_frame().reset_index()
@@ -40,7 +40,7 @@ def pieaction(df):
 
 #top n=10 ports inférieurs à p=1024 avec acces autorise
 def TOPportpermit(df,p,n):
-    df_permit = df[(df['action'] == 'PERMIT')& (df['portdst']<=p)]
+    df_permit = df[(df['action'] == 'PERMIT')& (df['portdst'].astype(int)<=p)]
     df_portdst=df_permit.portdst.value_counts()
     df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
     df_portdst=df_portdst.to_frame().reset_index()
@@ -80,43 +80,11 @@ def action_heure(df):
     fig = px.line(result, x="heure", y="nombre", color="action",title="nombre d'actions selon l'heure")
     return(fig)
 
-def portdst_heure(df):
-    # Convertir la colonne 'Date' en type datetime pour pouvoir extraire l'heure
-    df['date'] = pd.to_datetime(df['date'])
-
-    # Extraire l'heure de la colonne 'Date'
-    df['heure'] = df['date'].dt.hour
-    
-    df_deny=df[df['action'] == 'DENY']
-    
-    df_portdst=df_deny.portdst.value_counts()
-    df_portdst=df_portdst.sort_values(axis = 0, ascending = False)
-    df_portdst=df_portdst.to_frame().reset_index()
-    df_portdst.columns=['portdst','nombre']
-
-    #unique_portdst = df['portdst'].unique()
-    unique_portdst=df_portdst['portdst'].head(10).values
-    dataframes = []
-    
-    for portdst in unique_portdst:
-        df_port = df_deny[df_deny['portdst'] == portdst]
-        count_by_hour = df_port.groupby('heure').size()
-        count_by_hour = count_by_hour.to_frame().reset_index()
-        count_by_hour.columns = ['heure', 'nombre']
-        count_by_hour['portdst'] = portdst
-        dataframes.append(count_by_hour)
-
-    result = pd.concat(dataframes)
-    
-    fig = px.line(result, x='heure', y='nombre', color='portdst', title="nombre de ports attaqués selon l'heure")
-    return fig
-
-
 #affiche le bar plot des refus acceptés sur chaque type de port
 def proto(df):
     tab = pd.crosstab(index=df['proto'], columns=df['action'])
     fig = px.bar(tab, barmode='stack', color_discrete_sequence=['red', 'blue'])
-    fig.update_yaxes(range=[0, 800000], title='Effectifs')
+    fig.update_yaxes( title='Effectifs')
     fig.update_layout(legend=dict(orientation='h', yanchor='top', y=1.1, xanchor='center', x=0.5))
     return(fig)
 
@@ -215,21 +183,13 @@ def tableregle(df):
     tabregle = pd.crosstab(index=TCP['regle'], columns=TCP['action'])
     # Definir les données
     data = []
-
     for col in tabregle.columns:
-        trace = go.Bar(x=tabregle.index, y=tabregle[col], name=col, marker=dict(color="red" if col=="DENY" else "blue"))
-        data.append(trace)
-
-    # Definir le layout
-    layout = go.Layout(
-        barmode="stack",
-        yaxis=dict(title="Effectifs", range=[0, tabregle.values.max()]),
-        legend=dict(x=0, y=1, orientation="v")
-        )
+        sns.set_style('whitegrid')
+        fig = sns.barplot(x=tabregle.index, y=tabregle[col])
+    return fig.figure
 
     # Créer un bar chart
     fig = go.Figure(data=data, layout=layout)
-
     return fig
 
 def portdstregle(TCP,n):
@@ -238,9 +198,7 @@ def portdstregle(TCP,n):
     top_ports = portdst_n[:n].index
     df_top_ports = TCP[TCP['portdst'].isin(top_ports)]
     tabportdst_n = pd.crosstab(index=df_top_ports['portdst'], columns=df_top_ports['regle'])
-    fig = px.bar(tabportdst_n, x=tabportdst_n.index, y=tabportdst_n.columns,
-             color_discrete_sequence=px.colors.qualitative.Dark24)
-    fig.update_layout(title=f'Top {n} Destination TCP Ports by Rule',
-                  xaxis_title='Destination TCP Port',
-                  yaxis_title='Number of Packets')
-    return(fig)
+    for column in tabportdst_n.columns:
+        sns.set_style('whitegrid')
+        fig = sns.barplot(x=tabportdst_n.index, y=tabportdst_n[column]).set_title ('Top Destination TCP Ports by Rule')
+    return fig.figure

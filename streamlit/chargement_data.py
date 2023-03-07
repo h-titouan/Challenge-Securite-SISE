@@ -74,10 +74,8 @@ def filter_dataframe(df: pd.DataFrame):
 
 def lancement_data(filtre = 'non', n = 10000):
     if n <= 17000000:
-        data = pd.read_csv('C:/Users/laura/Downloads/log_fw_3.csv/log_fw_3.csv', sep = ';', header=None, nrows = n)
-        data.columns = ['date','ipsrc', 'ipdst','proto','portsrc','portdst','regle','action','interface','neant','numtransp']
-        #supprimer la colonne 'neant'
-        data.drop('neant', axis=1, inplace=True)
+        data = pd.read_csv('/app/data/data_logs.csv', sep = ',', nrows = n)
+
         # Trouver les lignes contenant des cellules vides
         lignes_vides = data.isnull().any(axis=1)
         # Supprimer les lignes contenant des cellules vides
