@@ -121,7 +121,6 @@ def portdst_heure(df):
 
 
 #affiche le bar plot des refus acceptés sur chaque type de port
-#affiche le bar plot des refus acceptés sur chaque type de port
 def proto(df):
     tab = pd.crosstab(index=df['proto'], columns=df['action'])
     fig = px.bar(tab, barmode='stack', color_discrete_sequence=['red', 'blue'])
@@ -134,6 +133,7 @@ def TOP_IPsrc(df,n):
     IPsrc=IPsrc.to_frame().reset_index()
     IPsrc.columns = ['IPsrc','nombre']
     return(IPsrc.head(n))
+
 
 def CAH_permit(df):
     # Créer un tableau de fréquences des ports de destination ayant été accepté
@@ -150,8 +150,8 @@ def CAH_permit(df):
     Z = linkage(test['freq'].values.reshape(-1, 1), 'ward')
 
     # Afficher le dendrogramme résultant
-    plt.figure(figsize=(10, 5))
-    fig=dendrogram(Z, labels=test.index)
+    fig, ax = plt.subplots(figsize=(10, 5))
+    dendrogram(Z, labels=test.index, ax=ax)
 
     # Tourner les labels de l'axe des x verticalement
     plt.xticks(rotation='vertical')
@@ -159,8 +159,8 @@ def CAH_permit(df):
     plt.title('Classification hiérarchique ascendante des ports de destination ayant au leur accès autorisé')
     plt.xlabel('portdst')
     plt.ylabel('Distance')
-    plt.show()
     return(fig)
+
 
 def IPsrc(df,n):
     df_permit = df[df['action'] == 'PERMIT']
